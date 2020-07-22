@@ -37,13 +37,6 @@ print(Fore.GREEN + "       #########################")
 print(Style.RESET_ALL)
 
 
-def serverDataIsOn():
-    result = getRequest('/')
-    print(log() + Fore.BLUE + "Message du DataServeur : " + Fore.GREEN + result['message'])
-
-
-serverDataIsOn()
-
 jobs = Queue.Queue()
 
 
@@ -57,10 +50,10 @@ class EchoProtocol(basic.LineReceiver):
         self.authenticated = False
         self.user = "xxx"
         self.nickname = "xxx"
-        self.play = None
+        self.locale = "Fr"
 
     def connectionMade(self):
-        msg = messageToClient('cnx', "Bienvenue sur l'application : Le Tarot Des Copains")
+        msg = messageToClient('cnx', "Bienvenue sur l'application : Chat SUB-PUB")
         self.sendMsg(msg)
         self.factory.onlineClients.append(self)
 
