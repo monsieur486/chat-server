@@ -1,0 +1,15 @@
+/env/
+/.idea/
+*.directory
+/bin/
+/build/
+/dist/
+/*.spec
+*__pycache__/
+/*.po~
+/*.pyc
+/devAsset/
+/public/settings/luncher.cfg
+/ressources/
+appSettings.py
+/appSettings.py.local

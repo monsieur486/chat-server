@@ -1,0 +1,6 @@
+# coding=utf-8
+
+
+DATA_URL = "http://127.0.0.1:12531"
+SERVER_URL = DATA_URL + '/api/'
+dataSrvIsOn = False
