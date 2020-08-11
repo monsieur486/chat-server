@@ -10,12 +10,8 @@ from colorama import Fore, Style
 from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from appCore.decodeur.analyseMsg import analyseMsg
-from appCore.game.GameState import GameState
-from appCore.game.gameLooseUser import gameLooseUser
-from appCore.mainMsg.MainAction import MainAction
 from appCore.mainMsg.StatsInfos import StatsInfos
-from appCore.mainMsg.playerLogOut import playerLogOut
-from appCore.network.network import messageToClient, getRequest, getUserInfos
+from appCore.network.network import messageToClient
 
 
 def t():
@@ -36,7 +32,6 @@ print(Fore.GREEN + "       #                       #")
 print(Fore.GREEN + "       #########################")
 print(Style.RESET_ALL)
 
-
 jobs = Queue.Queue()
 
 
@@ -49,11 +44,9 @@ class EchoProtocol(basic.LineReceiver):
     def __init__(self):
         self.authenticated = False
         self.user = "xxx"
-        self.nickname = "xxx"
-        self.locale = "Fr"
 
     def connectionMade(self):
-        msg = messageToClient('cnx', "Bienvenue sur l'application : Chat SUB-PUB")
+        msg = messageToClient('cnx', "Bienvenue")
         self.sendMsg(msg)
         self.factory.onlineClients.append(self)
 
@@ -68,23 +61,25 @@ class EchoProtocol(basic.LineReceiver):
     def connectionLost(self, reason):
         user = self.user
         print(log() + Fore.RED + "- connection perdue: " + Fore.GREEN + user)
-        gameUpdate = False
-        gameId = False
-        for game in self.factory.games:
-            if game.userPlaysInThisGame(user):
-                gameUpdate = True
-                gameId = game.gameId
-                game.loosePlayer(user)
-                if game.nobodyPlays() or game.isEmpty():
-                    print(log() + Fore.BLUE + "- partie " + Fore.GREEN + gameId + Fore.BLUE + " terminée")
-                    self.factory.games.remove(game)
-                    gameUpdate = False
+
+        if user == 'user01':
+            self.factory.user01State = 0
+
+        if user == 'user02':
+            self.factory.user02State = 0
+
+        if user == 'user03':
+            self.factory.user02State = 0
+
+        user01State = self.factory.user01State
+        user02State = self.factory.user02State
+        user03State = self.factory.user03State
 
         self.factory.onlineClients.remove(self)
-        if gameUpdate:
-            gameLooseUser(self, gameId)
-        else:
-            playerLogOut(self, user)
+
+        value = StatsInfos(user01State, user02State, user03State)
+        msg = messageToClient('mainAction', value)
+        self.sendAllUsersMsg(msg)
 
     def lineReceived(self, line):
         dataBrut = json.dumps(line)
@@ -101,8 +96,8 @@ class EchoProtocol(basic.LineReceiver):
                 value = message['value']
             analyseMsg(self, code, value)
 
-    def rawDataReceived(self, data):
-        pass
+    # def rawDataReceived(self, data):
+    #     pass
 
     ####################################################################################################################
 
@@ -113,39 +108,25 @@ class EchoProtocol(basic.LineReceiver):
         for client in self.factory.onlineClients:
             client.sendLine(serialize(msg))
 
-    def sendGameMsg(self, gameId, msg):
-        for game in self.factory.games:
-            if game.gameId == gameId:
-                for client in game.onLineClients():
-                    client.sendLine(serialize(msg))
-
     ####################################################################################################################
 
-    def reconnectUser(self, user):
-        for game in self.factory.games:
-            if game.userPlaysInThisGame(user):
-                self.play = game.gameId
-                game.reconnectPlayer(self)
-
     def connectionAccept(self, user):
-        userInfos = getUserInfos(user)
         self.user = user
-        self.nickname = (userInfos['nickname']).encode('utf-8')
         self.authenticated = True
 
-        self.reconnectUser(self.user)
+        if user == 'user01':
+            self.factory.user01State = 1
 
-        statsInfos = StatsInfos(self.nbPlayers(),
-                                self.nbGames(),
-                                self.freeGames(4),
-                                self.freeGames(5),
-                                self.privatesGamesList())
+        if user == 'user02':
+            self.factory.user02State = 1
 
-        gameInfos = False
-        if self.play:
-            gameInfos = self.gameStates(self.play)
+        if user == 'user03':
+            self.factory.user02State = 1
 
-        value = MainAction(statsInfos, userInfos, gameInfos)
+        value = StatsInfos(self.factory.user01State,
+                           self.factory.user02State,
+                           self.factory.user03State
+                           )
         msg = messageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
 
@@ -158,67 +139,6 @@ class EchoProtocol(basic.LineReceiver):
 
     ####################################################################################################################
 
-    def freeGames(self, players):
-        nbGames = 0
-        for game in self.factory.games:
-            if game.freeSlot() and not game.private:
-                if game.maxPlayers == players:
-                    nbGames += 1
-        return nbGames
-
-    def nbGames(self):
-        countGame = len(self.factory.games)
-        return countGame
-
-    def nbPlayers(self):
-        countPlayers = len(self.factory.onlineClients)
-        return countPlayers
-
-    def privatesGamesList(self):
-        exportList = []
-        gameList = sorted(self.factory.games, key=lambda PrivatesGamesList: PrivatesGamesList.denomination)
-        for game in gameList:
-            if game.freeSlot() and game.private:
-                exportList.append((game.gameId, game.maxPlayers, game.denomination))
-        return exportList
-
-    def gameStates(self, gameId):
-        for game in self.factory.games:
-            if game.gameId == gameId:
-                result = GameState(game.gameId,
-                                   game.denomination,
-                                   game.private,
-                                   game.nbPlayers,
-                                   game.maxPlayers,
-                                   game.isWithChat,
-                                   game.isWithRelance,
-                                   game.isWithAnnonce,
-                                   game.isWithRound,
-                                   game.isWithBelge,
-                                   game.isWithPetite,
-                                   game.isWithGarde,
-                                   game.isWithGardeSans,
-                                   game.isPlayable(),
-                                   game.state,
-                                   game.user1.nickname,
-                                   game.user1.isOnline,
-                                   game.user2.nickname,
-                                   game.user2.isOnline,
-                                   game.user3.nickname,
-                                   game.user3.isOnline,
-                                   game.user4.nickname,
-                                   game.user4.isOnline,
-                                   game.user5.nickname,
-                                   game.user5.isOnline,
-                                   game.captain(),
-                                   )
-                return result
-
-    def getGameFromId(self, gameId):
-        for game in self.factory.games:
-            if game.gameId == gameId:
-                return game
-
 
 class EchoServerFactory(protocol.ServerFactory):
     def __init__(self):
@@ -226,7 +146,9 @@ class EchoServerFactory(protocol.ServerFactory):
 
     protocol = EchoProtocol
     onlineClients = []
-    games = []
+    user01State = 0
+    user02State = 0
+    user03State = 0
 
 
 if __name__ == "__main__":
