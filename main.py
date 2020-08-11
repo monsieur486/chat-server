@@ -149,6 +149,7 @@ class EchoServerFactory(protocol.ServerFactory):
     user01State = 0
     user02State = 0
     user03State = 0
+    user04State = 0
 
 
 if __name__ == "__main__":
