@@ -10,7 +10,8 @@ from colorama import Fore, Style
 from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from appCore.decodeur.analyseMsg import analyseMsg
-from appCore.mainMsg.StatsInfos import StatsInfos
+from appCore.mainMsg.ChangeInfos import ChangeInfos
+from appCore.mainMsg.StatesInfos import StatsInfos
 from appCore.network.network import messageToClient
 
 
@@ -43,7 +44,7 @@ def serialize(msg):
 class EchoProtocol(basic.LineReceiver):
     def __init__(self):
         self.authenticated = False
-        self.user = "xxx"
+        self.user = "anonyme"
         self.nickname = "anonyme"
         self.admin = False
 
@@ -61,7 +62,7 @@ class EchoProtocol(basic.LineReceiver):
                 self.transport.getPeer().host)
 
     def connectionLost(self, reason):
-        user = self.nickname
+        user = self.user
         print(log() + Fore.RED + "- connection perdue: " + Fore.GREEN + user)
 
         if user == 'user01':
@@ -83,13 +84,15 @@ class EchoProtocol(basic.LineReceiver):
 
         self.factory.onlineClients.remove(self)
 
-        value = StatsInfos("loose",
-                           self.user,
-                           self.nickname,
-                           user01State,
-                           user02State,
-                           user03State,
-                           user04State)
+        value = ChangeInfos("loose",
+                            self.user,
+                            self.nickname,
+                            StatsInfos(
+                                user01State,
+                                user02State,
+                                user03State,
+                                user04State)
+                            )
         msg = messageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
 
@@ -143,14 +146,20 @@ class EchoProtocol(basic.LineReceiver):
             self.factory.user04State = 1
             self.admin = True
 
-        value = StatsInfos("win",
-                           self.user,
-                           self.nickname,
-                           self.factory.user01State,
-                           self.factory.user02State,
-                           self.factory.user03State,
-                           self.factory.user04State
-                           )
+        user01State = self.factory.user01State
+        user02State = self.factory.user02State
+        user03State = self.factory.user03State
+        user04State = self.factory.user04State
+
+        value = ChangeInfos("win",
+                            self.user,
+                            self.nickname,
+                            StatsInfos(
+                                user01State,
+                                user02State,
+                                user03State,
+                                user04State)
+                            )
         msg = messageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
 
@@ -161,8 +170,8 @@ class EchoProtocol(basic.LineReceiver):
         msg += Fore.GREEN + self.user
         print(msg)
 
-    def connectionNonAccept(self):
-        msg = messageToClient('error', "Bad Infos")
+    def connectionNonAccept(self, details):
+        msg = messageToClient('error', details)
         self.sendMsg(msg)
 
     ####################################################################################################################

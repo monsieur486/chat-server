@@ -18,5 +18,7 @@ def analyseMsg(self, code, value):
 
             if not self.authenticated and flag:
                 self.connectionAccept(str(value['user']))
+            else:
+                self.connectionNonAccept("duplicate")
         else:
-            self.connectionNonAccept()
+            self.connectionNonAccept("badcnx")
