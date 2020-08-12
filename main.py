@@ -44,6 +44,8 @@ class EchoProtocol(basic.LineReceiver):
     def __init__(self):
         self.authenticated = False
         self.user = "xxx"
+        self.nickname = "anonyme"
+        self.admin = False
 
     def connectionMade(self):
         msg = messageToClient('cnx', "Bienvenue")
@@ -59,7 +61,7 @@ class EchoProtocol(basic.LineReceiver):
                 self.transport.getPeer().host)
 
     def connectionLost(self, reason):
-        user = self.user
+        user = self.nickname
         print(log() + Fore.RED + "- connection perdue: " + Fore.GREEN + user)
 
         if user == 'user01':
@@ -71,13 +73,23 @@ class EchoProtocol(basic.LineReceiver):
         if user == 'user03':
             self.factory.user02State = 0
 
+        if user == 'user04':
+            self.factory.user04State = 0
+
         user01State = self.factory.user01State
         user02State = self.factory.user02State
         user03State = self.factory.user03State
+        user04State = self.factory.user04State
 
         self.factory.onlineClients.remove(self)
 
-        value = StatsInfos(user01State, user02State, user03State)
+        value = StatsInfos("loose",
+                           self.user,
+                           self.nickname,
+                           user01State,
+                           user02State,
+                           user03State,
+                           user04State)
         msg = messageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
 
@@ -115,17 +127,29 @@ class EchoProtocol(basic.LineReceiver):
         self.authenticated = True
 
         if user == 'user01':
+            self.nickname = "Poste 01"
             self.factory.user01State = 1
 
         if user == 'user02':
+            self.nickname = "Poste 02"
             self.factory.user02State = 1
 
         if user == 'user03':
-            self.factory.user02State = 1
+            self.nickname = "Poste 03"
+            self.factory.user03State = 1
 
-        value = StatsInfos(self.factory.user01State,
+        if user == 'user04':
+            self.nickname = "Poste 04"
+            self.factory.user04State = 1
+            self.admin = True
+
+        value = StatsInfos("win",
+                           self.user,
+                           self.nickname,
+                           self.factory.user01State,
                            self.factory.user02State,
-                           self.factory.user03State
+                           self.factory.user03State,
+                           self.factory.user04State
                            )
         msg = messageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
@@ -136,6 +160,10 @@ class EchoProtocol(basic.LineReceiver):
         msg += Fore.BLUE + " validée pour l'utilisateur "
         msg += Fore.GREEN + self.user
         print(msg)
+
+    def connectionNonAccept(self):
+        msg = messageToClient('error', "Bad Infos")
+        self.sendMsg(msg)
 
     ####################################################################################################################
 

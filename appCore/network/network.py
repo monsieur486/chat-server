@@ -24,7 +24,6 @@ def userIsRegistered(user, password):
         if user == password:
             userInfos = user
             return userInfos
-
         else:
             return False
     else:

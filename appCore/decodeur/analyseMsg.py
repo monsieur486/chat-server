@@ -11,5 +11,12 @@ def analyseMsg(self, code, value):
     if code == "userCnx":
         newUser = userIsRegistered(value['user'], value['password'])
         if newUser:
-            if not self.authenticated:
+            flag = True
+            for client in self.factory.onlineClients:
+                if client.user == newUser:
+                    flag = False
+
+            if not self.authenticated and flag:
                 self.connectionAccept(str(value['user']))
+        else:
+            self.connectionNonAccept()

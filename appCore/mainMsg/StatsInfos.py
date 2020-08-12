@@ -2,7 +2,11 @@
 
 
 class StatsInfos:
-    def __init__(self, user01State, user02State, user03State):
+    def __init__(self, change, user, nickname, user01State, user02State, user03State, user04State):
+        self.change = change
+        self.user = user
+        self.nickname = nickname
         self.user01State = user01State
         self.user02State = user02State
         self.user03State = user03State
+        self.user04State = user04State
