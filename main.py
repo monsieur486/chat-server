@@ -72,7 +72,7 @@ class EchoProtocol(basic.LineReceiver):
             self.factory.user02State = 0
 
         if user == 'user03':
-            self.factory.user02State = 0
+            self.factory.user03State = 0
 
         if user == 'user04':
             self.factory.user04State = 0
