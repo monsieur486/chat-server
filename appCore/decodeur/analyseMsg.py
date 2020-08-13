@@ -5,6 +5,7 @@ from appCore.network.network import userIsRegistered, messageToClient
 
 
 def analyseMsg(self, code, value):
+
     if code == "userQuit":
         self.transport.loseConnection()
 
