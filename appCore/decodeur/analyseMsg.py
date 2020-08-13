@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+from appCore.encodeur.ChatMsg import ChatMsg
 from appCore.mainMsg.ChangeInfos import ChangeInfos
 from appCore.mainMsg.StatesInfos import StatsInfos
 from appCore.network.network import userIsRegistered, messageToClient
 
 
 def analyseMsg(self, code, value):
-
     if code == "userQuit":
         self.transport.loseConnection()
 
@@ -67,3 +67,14 @@ def analyseMsg(self, code, value):
                             )
         msg = messageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
+
+    if code == "sendMsg":
+        user = value['user']
+        nickname = value['nickname']
+        msgToSend = value['msgToSend']
+
+        value = ChatMsg(user, nickname, msgToSend)
+        msg = messageToClient('newMessage', value)
+        self.sendAllUsersMsg(msg)
+
+
