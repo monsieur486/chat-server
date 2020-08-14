@@ -77,4 +77,13 @@ def analyseMsg(self, code, value):
         msg = messageToClient('newMessage', value)
         self.sendAllUsersMsg(msg)
 
+    if code == "sendPrivateMsg":
+        user = value['user']
+        nickname = value['nickname']
+        msgToSend = value['msgToSend']
+
+        value = ChatMsg(user, nickname, msgToSend)
+        msg = messageToClient('newMessage', value)
+        self.sendAllUsersMsg(msg)
+
 
