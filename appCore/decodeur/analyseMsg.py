@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from appCore.encodeur.ChatMsg import ChatMsg
+from appCore.encodeur.PrivateChatMsg import PrivateChatMsg
 from appCore.mainMsg.ChangeInfos import ChangeInfos
 from appCore.mainMsg.StatesInfos import StatsInfos
 from appCore.network.network import userIsRegistered, messageToClient
@@ -78,12 +79,23 @@ def analyseMsg(self, code, value):
         self.sendAllUsersMsg(msg)
 
     if code == "sendPrivateMsg":
+        recipientId = value['recipientId']
+        recipientNickname = recipientId
+        if recipientId == 'user01':
+            recipientNickname = 'Poste 1'
+        if recipientId == 'user02':
+            recipientNickname = 'Poste 2'
+        if recipientId == 'user03':
+            recipientNickname = 'Poste 3'
+        if recipientId == 'user04':
+            recipientNickname = 'Poste 4'
         user = value['user']
         nickname = value['nickname']
         msgToSend = value['msgToSend']
 
-        value = ChatMsg(user, nickname, msgToSend)
-        msg = messageToClient('newMessage', value)
-        self.sendAllUsersMsg(msg)
+        value = PrivateChatMsg(recipientId, recipientNickname, user, nickname, msgToSend)
 
-
+        for client in self.factory.onlineClients:
+            if client.user == recipientId or client.user == user:
+                msg = messageToClient('newPrivateMessage', value)
+                self.sendMsg(msg)
