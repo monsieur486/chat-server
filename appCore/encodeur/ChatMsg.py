@@ -2,7 +2,9 @@
 
 
 class ChatMsg:
-    def __init__(self, user, nickname, msgToSend):
+    def __init__(self, recipientId, recipientNickname, user, nickname, msgToSend):
+        self.recipientId = recipientId
+        self.recipientNickname = recipientNickname
         self.user = user
         self.nickname = nickname
         self.msgToSend = msgToSend
