@@ -183,5 +183,5 @@ class EchoServerFactory(protocol.ServerFactory):
 
 
 if __name__ == "__main__":
-    reactor.listenTCP(12530, EchoServerFactory())
+    reactor.listenTCP(12534, EchoServerFactory())
     reactor.run()
