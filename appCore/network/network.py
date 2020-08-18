@@ -1,19 +1,7 @@
 # coding=utf-8
 
 
-import ast
-import json
-import time
-import warnings
-import requests
-import appSettings
-
-
-def t():
-    return "[" + time.strftime("%Y-%m-%d %H:%M:%S") + "] "
-
-
-class messageToClient:
+class MessageToClient:
     def __init__(self, code, value):
         self.code = code
         self.value = value

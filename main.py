@@ -10,9 +10,9 @@ from colorama import Fore, Style
 from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from appCore.decodeur.analyseMsg import analyseMsg
-from appCore.mainMsg.ChangeInfos import ChangeInfos
-from appCore.mainMsg.StatesInfos import StatsInfos
-from appCore.network.network import messageToClient
+from appCore.encodeur.ChangeInfos import ChangeInfos
+from appCore.encodeur.StatesInfos import StatsInfos
+from appCore.network.network import MessageToClient
 
 
 def t():
@@ -46,10 +46,15 @@ class EchoProtocol(basic.LineReceiver):
         self.authenticated = False
         self.user = "anonyme"
         self.nickname = "anonyme"
-        self.admin = False
 
     def connectionMade(self):
-        msg = messageToClient('cnx', "Bienvenue")
+        user01State = self.factory.user01State
+        user02State = self.factory.user02State
+        user03State = self.factory.user03State
+
+        statsInfos = StatsInfos(user01State, user02State, user03State)
+
+        msg = MessageToClient('cnx', statsInfos)
         self.sendMsg(msg)
         self.factory.onlineClients.append(self)
 
@@ -74,13 +79,9 @@ class EchoProtocol(basic.LineReceiver):
         if user == 'user03':
             self.factory.user03State = 0
 
-        if user == 'user04':
-            self.factory.user04State = 0
-
         user01State = self.factory.user01State
         user02State = self.factory.user02State
         user03State = self.factory.user03State
-        user04State = self.factory.user04State
 
         self.factory.onlineClients.remove(self)
 
@@ -90,10 +91,9 @@ class EchoProtocol(basic.LineReceiver):
                             StatsInfos(
                                 user01State,
                                 user02State,
-                                user03State,
-                                user04State)
+                                user03State)
                             )
-        msg = messageToClient('mainAction', value)
+        msg = MessageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
 
     def lineReceived(self, line):
@@ -123,6 +123,11 @@ class EchoProtocol(basic.LineReceiver):
         for client in self.factory.onlineClients:
             client.sendLine(serialize(msg))
 
+    def sendUserIdMsg(self, userID, msg):
+        for client in self.factory.onlineClients:
+            if client.user == userID:
+                client.sendLine(serialize(msg))
+
     ####################################################################################################################
 
     def connectionAccept(self, user):
@@ -141,15 +146,9 @@ class EchoProtocol(basic.LineReceiver):
             self.nickname = "Poste 03"
             self.factory.user03State = 1
 
-        if user == 'user04':
-            self.nickname = "Poste 04"
-            self.factory.user04State = 1
-            self.admin = True
-
         user01State = self.factory.user01State
         user02State = self.factory.user02State
         user03State = self.factory.user03State
-        user04State = self.factory.user04State
 
         value = ChangeInfos("win",
                             self.user,
@@ -157,10 +156,9 @@ class EchoProtocol(basic.LineReceiver):
                             StatsInfos(
                                 user01State,
                                 user02State,
-                                user03State,
-                                user04State)
+                                user03State)
                             )
-        msg = messageToClient('mainAction', value)
+        msg = MessageToClient('mainAction', value)
         self.sendAllUsersMsg(msg)
 
         msg = Style.RESET_ALL + t()
@@ -169,10 +167,6 @@ class EchoProtocol(basic.LineReceiver):
         msg += Fore.BLUE + " validée pour l'utilisateur "
         msg += Fore.GREEN + self.user
         print(msg)
-
-    def connectionNonAccept(self, details):
-        msg = messageToClient('error', details)
-        self.sendMsg(msg)
 
     ####################################################################################################################
 
@@ -186,7 +180,6 @@ class EchoServerFactory(protocol.ServerFactory):
     user01State = 0
     user02State = 0
     user03State = 0
-    user04State = 0
 
 
 if __name__ == "__main__":

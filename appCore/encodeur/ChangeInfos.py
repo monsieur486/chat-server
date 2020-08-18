@@ -2,8 +2,8 @@
 
 
 class ChangeInfos:
-    def __init__(self, action, user, nickname, statesUsers):
+    def __init__(self, action, userID, nickname, statesUsers):
         self.action = action
-        self.user = user
+        self.userID = userID
         self.nickname = nickname
         self.statesUsers = statesUsers
