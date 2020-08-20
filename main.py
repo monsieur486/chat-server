@@ -11,6 +11,8 @@ from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from appCore.decodeur.analyseMsg import analyseMsg
 from appCore.encodeur.ChangeInfos import ChangeInfos
+from appCore.encodeur.CnxMsg import CnxMsg
+from appCore.encodeur.ProductInfos import ProductInfos
 from appCore.encodeur.StatesInfos import StatsInfos
 from appCore.network.network import MessageToClient
 
@@ -54,7 +56,17 @@ class EchoProtocol(basic.LineReceiver):
 
         statsInfos = StatsInfos(user01State, user02State, user03State)
 
-        msg = MessageToClient('cnx', statsInfos)
+        product01 = self.factory.product01
+        product02 = self.factory.product02
+        product03 = self.factory.product03
+
+        productInfos = ProductInfos(product01, product02, product03)
+
+        welcomeMsg = "Bienvenue sur AppPubSub"
+
+        cnxMsg = CnxMsg(statsInfos, productInfos, welcomeMsg)
+
+        msg = MessageToClient('cnx', cnxMsg)
         self.sendMsg(msg)
         self.factory.onlineClients.append(self)
 
@@ -181,9 +193,9 @@ class EchoServerFactory(protocol.ServerFactory):
     user02State = 0
     user03State = 0
 
-    pdt01 = 0
-    pdt02 = 0
-    pdt03 = 0
+    product01 = 0
+    product02 = 0
+    product03 = 0
 
 
 if __name__ == "__main__":
