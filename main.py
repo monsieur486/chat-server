@@ -111,8 +111,8 @@ class EchoProtocol(basic.LineReceiver):
                 value = message['value']
             analyseMsg(self, code, value)
 
-    # def rawDataReceived(self, data):
-    #     pass
+    def rawDataReceived(self, data):
+        pass
 
     ####################################################################################################################
 
@@ -180,6 +180,10 @@ class EchoServerFactory(protocol.ServerFactory):
     user01State = 0
     user02State = 0
     user03State = 0
+
+    pdt01 = 0
+    pdt02 = 0
+    pdt03 = 0
 
 
 if __name__ == "__main__":
